@@ -127,7 +127,7 @@ func! s:HandlerDictSearch(channel,msg)
     endif
 endf
 func! s:ReadWord()
-    if match(s:queryWords,"[\u4e00-\u9fcc]")<0
+    if match(s:queryWords,"[\u4e00-\u9fcc]")<0 && len(s:queryWords) <20
         call job_start("say ".s:queryWords)
     endif
 endf
