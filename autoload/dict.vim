@@ -116,8 +116,13 @@ endfunction
 
 function! s:DictSearch(queryWords, searchType) abort
     let s:queryWords = a:queryWords
-    let handlerName = s:FuncNameWithSid("HandlerDictSearch")
-    call job_start('python3 '.g:DictPythonFilePath.' "'.a:queryWords.'"',{'callback':handlerName})
+    if has('nvim')
+      let handlerName = s:FuncNameWithSid("NvimHandlerDictSearch")
+      call jobstart('python3 '.g:DictPythonFilePath.' "'.a:queryWords.'"',{'on_stdout':handlerName})
+    else
+      let handlerName = s:FuncNameWithSid("HandlerDictSearch")
+      call job_start('python3 '.g:DictPythonFilePath.' "'.a:queryWords.'"',{'callback':handlerName})
+    endif
     call s:ReadWord()
 endfunction
 
@@ -126,9 +131,20 @@ func! s:HandlerDictSearch(channel,msg)
         call s:DrawBuffer(a:msg)
     endif
 endf
+func! s:NvimHandlerDictSearch(job_id, data, event)
+    if len(a:data)>0
+      for line in a:data
+        call s:DrawBuffer(line)
+      endfor
+    endif
+endf
 func! s:ReadWord()
-    if match(s:queryWords,"[\u4e00-\u9fcc]")<0
+    if match(s:queryWords,"[\u4e00-\u9fcc]")<0 && len(s:queryWords) <20
+      if has('nvim')
+        call jobstart("say ".s:queryWords)
+      else
         call job_start("say ".s:queryWords)
+      endif
     endif
 endf
 
